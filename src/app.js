@@ -3,6 +3,7 @@ import cors from "cors";
 import Joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
+import dayjs from "dayjs";
 import connection from "./database/database.js";
 
 const app = express();
@@ -110,6 +111,67 @@ app.post("/sign-in", async (req, res) => {
     user.token = token;
 
     res.send(user);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+});
+//############# New Transaction ###########
+const validTransactionTypes = ["in", "out"];
+const transactionSchema = Joi.object({
+  description: Joi.string().required(),
+  value: Joi.number().integer().required(),
+  type: Joi.string()
+    .valid(...validTransactionTypes)
+    .required(),
+});
+
+app.post("/new-transaction", async (req, res) => {
+  try {
+    const token = req.headers["authorization"]?.replace("Bearer ", "");
+    if (typeof token !== "string" || token === "") {
+      res.status(401);
+      return res.send("Authorization needed");
+    }
+
+    const validationError = transactionSchema.validate(req.body).error;
+
+    if (validationError) {
+      const errorMessage = validationError.details[0].message;
+
+      res.status(400);
+      return res.send(errorMessage);
+    }
+
+    const result = await connection.query(
+      `
+      SELECT sessions.user_id as "userId" FROM sessions
+      WHERE token = $1
+      `,
+      [token]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      res.status(400);
+      return res.send("Invalid token");
+    }
+
+    const dateNow = dayjs().format("YYYY-MM-DD");
+    const { description, value, type } = req.body;
+
+    await connection.query(
+      `
+      INSERT INTO transactions
+      (user_id, description, value, date, type)
+      VALUES
+      ($1,$2,$3,$4,$5)
+     `,
+      [user.userId, description, value, dateNow, type]
+    );
+
+    res.sendStatus(201);
   } catch (err) {
     console.log(err);
     res.sendStatus(500);
