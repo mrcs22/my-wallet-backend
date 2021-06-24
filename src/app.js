@@ -116,7 +116,7 @@ app.post("/sign-in", async (req, res) => {
     res.sendStatus(500);
   }
 });
-//############# New Transaction ###########
+//############# Transaction ###########
 const validTransactionTypes = ["in", "out"];
 const transactionSchema = Joi.object({
   description: Joi.string().required(),
@@ -177,6 +177,50 @@ app.post("/new-transaction", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+//############ Get User Transactions ##########
+
+app.get("/transactions", async (req, res) => {
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
+
+  if (typeof token !== "string" || token === "") {
+    res.status(401);
+    return res.send("Authorization needed");
+  }
+
+  const userResult = await connection.query(
+    `
+      SELECT sessions.user_id as "userId" FROM sessions
+      WHERE token = $1
+      `,
+    [token]
+  );
+
+  const user = userResult.rows[0];
+
+  if (!user) {
+    res.status(400);
+    return res.send("Invalid token");
+  }
+
+  const transactionsResult = await connection.query(
+    `
+  SELECT * FROM transactions
+  WHERE user_id = $1
+  `,
+    [user.userId]
+  );
+
+  let total = 0;
+  const transactions = transactionsResult.rows.map((t) => {
+    t.date = dayjs(t.date).format("YYYY-MM-DD");
+    t.type === "in" ? (total += t.value) : (total -= t.value);
+    return t;
+  });
+
+  res.send({ total, transactions });
+});
+//############ Starting Server ###############
 
 app.listen(4000, () => {
   console.log("Server is listening on port 4000.");
