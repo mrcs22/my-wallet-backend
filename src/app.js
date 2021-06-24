@@ -120,13 +120,13 @@ app.post("/sign-in", async (req, res) => {
 const validTransactionTypes = ["in", "out"];
 const transactionSchema = Joi.object({
   description: Joi.string().required(),
-  value: Joi.number().integer().required(),
+  value: Joi.number().integer().greater(0).required(),
   type: Joi.string()
     .valid(...validTransactionTypes)
     .required(),
 });
 
-app.post("/new-transaction", async (req, res) => {
+app.post("/transactions", async (req, res) => {
   try {
     const token = req.headers["authorization"]?.replace("Bearer ", "");
     if (typeof token !== "string" || token === "") {
@@ -159,6 +159,7 @@ app.post("/new-transaction", async (req, res) => {
     }
 
     const dateNow = dayjs().format("YYYY-MM-DD");
+
     const { description, value, type } = req.body;
 
     await connection.query(
