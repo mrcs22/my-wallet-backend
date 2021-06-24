@@ -30,7 +30,16 @@ app.post("/sign-up", async (req, res) => {
     }
 
     const { name, email, password } = req.body;
+    const result = await connection.query(
+      `SELECT * FROM users WHERE email ILIKE $1`,
+      [email]
+    );
+
     const hashedPassword = bcrypt.hashSync(password, 12);
+
+    if (result.rows.length > 0) {
+      return res.sendStatus(409);
+    }
 
     await connection.query(
       `
