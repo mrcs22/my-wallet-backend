@@ -130,7 +130,7 @@ app.post("/transactions", async (req, res) => {
   try {
     const token = req.headers["authorization"]?.replace("Bearer ", "");
     if (typeof token !== "string" || token === "") {
-      res.status(401);
+      res.status(400);
       return res.send("Authorization needed");
     }
 
@@ -154,7 +154,7 @@ app.post("/transactions", async (req, res) => {
     const user = result.rows[0];
 
     if (!user) {
-      res.status(400);
+      res.status(401);
       return res.send("Invalid token");
     }
 
@@ -185,7 +185,7 @@ app.get("/transactions", async (req, res) => {
   const token = req.headers["authorization"]?.replace("Bearer ", "");
 
   if (typeof token !== "string" || token === "") {
-    res.status(401);
+    res.status(400);
     return res.send("Authorization needed");
   }
 
@@ -200,7 +200,7 @@ app.get("/transactions", async (req, res) => {
   const user = userResult.rows[0];
 
   if (!user) {
-    res.status(400);
+    res.status(401);
     return res.send("Invalid token");
   }
 
