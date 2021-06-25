@@ -207,44 +207,49 @@ app.post("/transactions", async (req, res) => {
 });
 
 app.get("/transactions", async (req, res) => {
-  const token = req.headers["authorization"]?.replace("Bearer ", "");
+  try {
+    const token = req.headers["authorization"]?.replace("Bearer ", "");
 
-  if (typeof token !== "string" || token === "") {
-    res.status(400);
-    return res.send("Authorization needed");
-  }
+    if (typeof token !== "string" || token === "") {
+      res.status(400);
+      return res.send("Authorization needed");
+    }
 
-  const userResult = await connection.query(
-    `
+    const userResult = await connection.query(
+      `
       SELECT sessions.user_id as "userId" FROM sessions
       WHERE token = $1
       `,
-    [token]
-  );
+      [token]
+    );
 
-  const user = userResult.rows[0];
+    const user = userResult.rows[0];
 
-  if (!user) {
-    res.status(401);
-    return res.send("Invalid token");
-  }
+    if (!user) {
+      res.status(401);
+      return res.send("Invalid token");
+    }
 
-  const transactionsResult = await connection.query(
-    `
+    const transactionsResult = await connection.query(
+      `
   SELECT * FROM transactions
   WHERE user_id = $1
   `,
-    [user.userId]
-  );
+      [user.userId]
+    );
 
-  let total = 0;
-  const transactions = transactionsResult.rows.map((t) => {
-    t.date = dayjs(t.date).format("YYYY-MM-DD");
-    t.type === "in" ? (total += t.value) : (total -= t.value);
-    return t;
-  });
+    let total = 0;
+    const transactions = transactionsResult.rows.map((t) => {
+      t.date = dayjs(t.date).format("YYYY-MM-DD");
+      t.type === "in" ? (total += t.value) : (total -= t.value);
+      return t;
+    });
 
-  res.send({ total, transactions });
+    res.send({ total, transactions });
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
 });
 
 export default app;
