@@ -10,10 +10,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.get("/test", (req, res) => {
-  res.sendStatus(201);
-});
-
 //############## Sign Up ##################
 
 app.post("/sign-up", async (req, res) => {
