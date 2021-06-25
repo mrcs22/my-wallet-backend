@@ -1,6 +1,6 @@
 import supertest from "supertest";
-import app from "../app.js";
-import connection from "../database/database";
+import app from "../src/app.js";
+import connection from "../src/database/database";
 
 beforeAll(async () => {
   await connection.query(`
