@@ -10,6 +10,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get("/test", (req, res) => {
+  res.sendStatus(201);
+});
+
 //############## Sign Up ##################
 
 app.post("/sign-up", async (req, res) => {
@@ -116,7 +120,34 @@ app.post("/sign-in", async (req, res) => {
     res.sendStatus(500);
   }
 });
-//############# Transaction ###########
+
+//############### Sign Out ###############3
+
+app.post("/sign-out", async (req, res) => {
+  try {
+    const token = req.headers["authorization"]?.replace("Bearer ", "");
+
+    if (typeof token !== "string" || token === "") {
+      res.status(400);
+      return res.send("Authorization needed");
+    }
+
+    await connection.query(
+      `
+    DELETE FROM sessions
+    WHERE token = $1
+    `,
+      [token]
+    );
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.send(500);
+  }
+});
+
+//############# Transactions ###########
 const validTransactionTypes = ["in", "out"];
 const transactionSchema = Joi.object({
   description: Joi.string().required(),
@@ -179,8 +210,6 @@ app.post("/transactions", async (req, res) => {
   }
 });
 
-//############ Get User Transactions ##########
-
 app.get("/transactions", async (req, res) => {
   const token = req.headers["authorization"]?.replace("Bearer ", "");
 
@@ -221,8 +250,5 @@ app.get("/transactions", async (req, res) => {
 
   res.send({ total, transactions });
 });
-//############ Starting Server ###############
 
-app.listen(4000, () => {
-  console.log("Server is listening on port 4000.");
-});
+export default app;
