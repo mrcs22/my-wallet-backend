@@ -21,9 +21,9 @@ VALUES
 INSERT INTO transactions
 (user_id, description, date, value, type)
 VALUES
+(1,'mesa bonita', '2020-02-15',300000,'out'),
 (1,'notebook bacana', '2020-06-21',600000,'out'),
-(1,'cadeira top', '2020-08-26',200000,'out'),
-(1,'mesa bonita', '2020-02-15',300000,'out')
+(1,'cadeira top', '2020-08-26',200000,'out')
 `);
 });
 
@@ -60,18 +60,19 @@ describe("GET /transactions", () => {
       transactions: [
         {
           user_id: 1,
-          description: "notebook bacana",
-          value: 600000,
-          date: "2020-06-21",
-          type: "out",
-        },
-        {
-          user_id: 1,
           description: "cadeira top",
           value: 200000,
           date: "2020-08-26",
           type: "out",
         },
+        {
+          user_id: 1,
+          description: "notebook bacana",
+          value: 600000,
+          date: "2020-06-21",
+          type: "out",
+        },
+
         {
           user_id: 1,
           description: "mesa bonita",
@@ -173,11 +174,11 @@ describe("POST /transactions", () => {
 
 afterAll(async () => {
   await connection.query(`
-DELETE FROM sessions
-`);
+  DELETE FROM sessions
+  `);
   await connection.query(`
-DELETE FROM transactions
-`);
+  DELETE FROM transactions
+  `);
 
   connection.end();
 });
